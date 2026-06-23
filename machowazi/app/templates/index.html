@@ -75,7 +75,6 @@
             </div>
           </div>
 
-          {% set recent = company.reviews.filter_by(is_approved=True).order_by_desc = company.reviews.filter_by(is_approved=True).first() %}
           {% set r = company.reviews.filter_by(is_approved=True).first() %}
           {% if r %}
           <div class="card-footer-strip">
