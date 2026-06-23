@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Manage Users — Admin{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <h3 style="margin-bottom:1rem;">Admin Panel</h3>
+    <a class="admin-nav-link" href="{{ url_for('admin.dashboard') }}">📊 Dashboard</a>
+    <a class="admin-nav-link" href="{{ url_for('admin.reviews') }}">📝 Reviews</a>
+    <a class="admin-nav-link" href="{{ url_for('admin.salaries') }}">💰 Salaries</a>
+    <a class="admin-nav-link" href="{{ url_for('admin.interviews') }}">🤝 Interviews</a>
+    <a class="admin-nav-link" href="{{ url_for('admin.companies') }}">🏦 Companies</a>
+    <a class="admin-nav-link active" href="{{ url_for('admin.users') }}">👥 Users</a>
+    <div style="height:1px;background:rgba(255,255,255,0.08);margin:1rem 0;"></div>
+    <a class="admin-nav-link" href="{{ url_for('main.index') }}">← Back to Site</a>
+  </aside>
+
+  <div class="admin-content">
+    <h2 style="margin-bottom:1.5rem;">Users ({{ users|length }})</h2>
+    <div style="background:white;border-radius:var(--radius);border:1px solid var(--grey-border);overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--grey-border);">
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Token ID</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Reviews</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Verified</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Admin</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Joined</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr style="border-bottom:1px solid var(--grey-border);">
+            <td style="padding:0.9rem 1rem;font-family:monospace;font-size:0.8rem;color:var(--text-mid);">{{ u.display_token[:12] }}...</td>
+            <td style="padding:0.9rem 1rem;">{{ u.reviews.count() }}</td>
+            <td style="padding:0.9rem 1rem;">
+              <span class="badge {{ 'badge-green' if u.is_verified else 'badge-amber' }}">
+                {{ '✓ Verified' if u.is_verified else 'Pending' }}
+              </span>
+            </td>
+            <td style="padding:0.9rem 1rem;">
+              {% if u.is_admin %}<span class="badge badge-navy">Admin</span>{% else %}—{% endif %}
+            </td>
+            <td style="padding:0.9rem 1rem;color:var(--text-light);font-size:0.8rem;">{{ u.created_at.strftime('%d %b %Y') }}</td>
+            <td style="padding:0.9rem 1rem;">
+              {% if not u.is_admin %}
+              <form method="POST" action="{{ url_for('admin.make_admin', user_id=u.id) }}"
+                    onsubmit="return confirm('Make this user an admin?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline">Make Admin</button>
+              </form>
+              {% else %}
+              <span style="font-size:0.78rem;color:var(--text-light);">Super admin</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

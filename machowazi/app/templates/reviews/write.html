@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% block title %}Write a Review — Macho Wazi{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div class="container">
+    <h1>Write an Anonymous Review</h1>
+    <p>Your name is never shared. Help Kenya's workforce make better decisions.</p>
+  </div>
+</div>
+
+<section class="section-sm">
+  <div class="container-sm">
+
+    <div class="anon-note">
+      🔒 <div><strong>Your identity is protected.</strong> We verify you worked at the company using your account — your name and email are never shown to anyone, ever.</div>
+    </div>
+
+    {% if not current_user.is_authenticated %}
+    <div style="background:var(--amber-light);border:1px solid rgba(245,166,35,0.4);border-radius:var(--radius-sm);padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:0.88rem;">
+      You need to <a href="{{ url_for('auth.login') }}" style="color:var(--amber-dark);font-weight:600;">sign in</a> or
+      <a href="{{ url_for('auth.register') }}" style="color:var(--amber-dark);font-weight:600;">create an account</a> to write a review.
+    </div>
+    {% endif %}
+
+    <form method="POST" id="reviewForm" action="{{ url_for('reviews.write_review') }}">
+      {{ form.hidden_tag() }}
+      {{ form.company_id() }}
+
+      <div class="form-card">
+        <h3 style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--grey-border);">Company & Role</h3>
+
+        {% if not company %}
+        <div class="form-group">
+          <label>Company <span class="required">*</span></label>
+          <select name="company_id" class="form-control" id="company_id_select" required>
+            <option value="">Select a company...</option>
+            {% for c in companies %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% else %}
+        <div class="form-group">
+          <label>Company</label>
+          <div style="display:flex;align-items:center;gap:0.75rem;padding:0.72rem 0.9rem;background:var(--grey-bg);border:1.5px solid var(--grey-border);border-radius:var(--radius-sm);">
+            <div class="company-logo" style="background:{{ company.logo_color }};width:32px;height:32px;font-size:0.65rem;border-radius:6px;">{{ company.logo_initials }}</div>
+            <strong>{{ company.name }}</strong>
+          </div>
+          <input type="hidden" name="company_id" value="{{ company.id }}">
+        </div>
+        {% endif %}
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group">
+            <label>{{ form.job_title.label.text }} <span class="required">*</span></label>
+            {{ form.job_title(class='form-control', placeholder='e.g. Credit Analyst') }}
+            {% for e in form.job_title.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label>{{ form.employment_status.label.text }} <span class="required">*</span></label>
+            {{ form.employment_status(class='form-control') }}
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group">
+            <label>{{ form.years_at_company.label.text }}</label>
+            {{ form.years_at_company(class='form-control') }}
+          </div>
+          <div class="form-group">
+            <label>{{ form.location.label.text }}</label>
+            {{ form.location(class='form-control') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card" style="margin-top:1.25rem;">
+        <h3 style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--grey-border);">Your Ratings</h3>
+
+        <!-- Overall rating -->
+        <div class="form-group">
+          <label>Overall Rating <span class="required">*</span></label>
+          <div class="star-field" data-target="overall_rating">
+            <div class="star-rating-group" style="flex-direction:row-reverse;justify-content:flex-end;">
+              {% for v in [5,4,3,2,1] %}
+              <input type="radio" name="overall_star" id="os{{ v }}" value="{{ v }}"
+                     onchange="document.getElementById('overall_rating').value='{{ v }}'">
+              <label for="os{{ v }}" title="{{ v }} star{% if v != 1 %}s{% endif %}">★</label>
+              {% endfor %}
+            </div>
+          </div>
+          {{ form.overall_rating(type='hidden', id='overall_rating') }}
+          {% for e in form.overall_rating.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+        </div>
+
+        <!-- Sub-ratings grid -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.25rem;margin-top:0.5rem;">
+          {% set sub_fields = [
+            ('culture_rating',    'Culture & Values'),
+            ('management_rating', 'Management'),
+            ('worklife_rating',   'Work-Life Balance'),
+            ('pay_rating',        'Compensation & Benefits'),
+            ('growth_rating',     'Career Growth'),
+          ] %}
+          {% for field_name, label in sub_fields %}
+          <div class="form-group" style="margin-bottom:0;">
+            <label style="font-size:0.78rem;">{{ label }} <span class="required">*</span></label>
+            <div style="display:flex;gap:4px;">
+              {% for v in [1,2,3,4,5] %}
+              <input type="radio" name="{{ field_name }}_star" id="{{ field_name }}_{{ v }}" value="{{ v }}" style="display:none;"
+                     onchange="document.getElementById('{{ field_name }}').value='{{ v }}'">
+              <label for="{{ field_name }}_{{ v }}"
+                     style="font-size:1.4rem;color:var(--grey-border);cursor:pointer;transition:color 0.15s;"
+                     onmouseover="highlightStars('{{ field_name }}',{{ v }})"
+                     onmouseout="resetStars('{{ field_name }}')"
+                     onclick="setRating('{{ field_name }}',{{ v }})">★</label>
+              {% endfor %}
+            </div>
+            {{ form[field_name](type='hidden', id=field_name) }}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="form-card" style="margin-top:1.25rem;">
+        <h3 style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--grey-border);">Your Review</h3>
+
+        <div class="form-group">
+          <label>{{ form.headline.label.text }} <span class="required">*</span></label>
+          {{ form.headline(class='form-control', placeholder='Summarize your experience in one line...') }}
+          {% for e in form.headline.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="form-group">
+            <label>{{ form.pros.label.text }} <span class="required">*</span></label>
+            {{ form.pros(class='form-control', rows=5, placeholder='What do you genuinely like about working here?') }}
+            {% for e in form.pros.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            <label>{{ form.cons.label.text }} <span class="required">*</span></label>
+            {{ form.cons(class='form-control', rows=5, placeholder='What could be better? Be specific and fair.') }}
+            {% for e in form.cons.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>{{ form.advice_to_management.label.text }}</label>
+          {{ form.advice_to_management(class='form-control', rows=3, placeholder='If the CEO could read one thing from you anonymously, what would it be?') }}
+        </div>
+
+        <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:0.5rem;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.88rem;">
+            {{ form.would_recommend(style='width:16px;height:16px;accent-color:var(--green);') }}
+            I would recommend this company to a friend
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.88rem;">
+            {{ form.ceo_approval(style='width:16px;height:16px;accent-color:var(--green);') }}
+            I approve of the CEO's leadership
+          </label>
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+        <button type="submit" class="btn btn-amber btn-lg">Submit Anonymously 🔒</button>
+        <span style="font-size:0.78rem;color:var(--text-light);">Your name will never be shown to anyone.</span>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script>
+function highlightStars(field, upTo) {
+  for (let i = 1; i <= 5; i++) {
+    const label = document.querySelector(`label[for="${field}_${i}"]`);
+    if (label) label.style.color = i <= upTo ? 'var(--amber)' : 'var(--grey-border)';
+  }
+}
+
+function resetStars(field) {
+  const current = document.getElementById(field).value;
+  for (let i = 1; i <= 5; i++) {
+    const label = document.querySelector(`label[for="${field}_${i}"]`);
+    if (label) label.style.color = current && i <= parseInt(current) ? 'var(--amber)' : 'var(--grey-border)';
+  }
+}
+
+function setRating(field, val) {
+  document.getElementById(field).value = val;
+  highlightStars(field, val);
+}
+
+// Fix: when company_id_select changes, also update hidden company_id field
+const sel = document.getElementById('company_id_select');
+if (sel) sel.addEventListener('change', () => {
+  document.querySelector('input[name=company_id]').value = sel.value;
+});
+</script>
+{% endblock %}

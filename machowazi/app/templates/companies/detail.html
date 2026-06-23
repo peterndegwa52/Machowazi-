@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% block title %}{{ company.name }} Reviews & Salaries — Macho Wazi{% endblock %}
+
+{% block content %}
+
+<!-- COMPANY HEADER -->
+<div style="background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%);padding:2.5rem 0;">
+  <div class="container">
+    <div style="display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap;">
+      <div class="company-logo" style="background:{{ company.logo_color }};width:72px;height:72px;font-size:1.2rem;border-radius:14px;flex-shrink:0;">
+        {{ company.logo_initials }}
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <h1 style="color:white;font-size:clamp(1.5rem,3vw,2rem);margin-bottom:0.35rem;">{{ company.name }}</h1>
+        <p style="color:rgba(255,255,255,0.55);font-size:0.88rem;margin-bottom:0.75rem;">
+          {{ company.industry }} · {{ company.headquarters }}
+          {% if company.founded %}· Founded {{ company.founded }}{% endif %}
+          {% if company.size %}· {{ company.size }}{% endif %}
+        </p>
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="rating-badge" style="font-size:1.1rem;padding:0.35rem 0.75rem;">{{ company.avg_rating }}</div>
+            <span class="stars" style="font-size:1rem;">
+              {% for i in range(5) %}{% if i < company.avg_rating|int %}★{% else %}☆{% endif %}{% endfor %}
+            </span>
+            <span style="color:rgba(255,255,255,0.5);font-size:0.83rem;">{{ company.review_count }} reviews</span>
+          </div>
+          <span style="color:rgba(255,255,255,0.4);font-size:0.8rem;">|</span>
+          <span class="recommend-pill recommend-yes" style="font-size:0.78rem;">{{ company.recommend_pct }}% recommend</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-self:flex-end;">
+        <a href="{{ url_for('reviews.write_review', company_id=company.id) }}" class="btn btn-amber">Write a Review</a>
+        <a href="{{ url_for('salaries.share_salary', company_id=company.id) }}" class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.3);">Share Salary</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<section class="section-sm">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 300px;gap:2rem;align-items:start;" class="detail-layout">
+
+      <!-- LEFT: TABS -->
+      <div>
+        <div class="tabs" data-tab-group="company">
+          <button class="tab-btn active" data-tab="reviews">
+            Reviews <span style="color:var(--text-light);font-weight:400;">({{ company.review_count }})</span>
+          </button>
+          <button class="tab-btn" data-tab="salaries">
+            Salaries <span style="color:var(--text-light);font-weight:400;">({{ salaries|length }})</span>
+          </button>
+          <button class="tab-btn" data-tab="interviews">
+            Interviews <span style="color:var(--text-light);font-weight:400;">({{ interviews|length }})</span>
+          </button>
+          <button class="tab-btn" data-tab="about">About</button>
+        </div>
+
+        <!-- REVIEWS TAB -->
+        <div class="tab-pane active" id="reviews" data-tab-pane="company">
+          {% if reviews.items %}
+            {% for review in reviews.items %}
+            <div class="review-card">
+              <div class="review-header">
+                <div>
+                  <div class="reviewer-title">{{ review.job_title }}</div>
+                  <div class="reviewer-meta">
+                    {{ review.employment_status|title }} Employee ·
+                    {% if review.years_at_company < 1 %}Less than 1 year{% else %}{{ review.years_at_company|int }} year{% if review.years_at_company|int != 1 %}s{% endif %}{% endif %} ·
+                    {{ review.location }} · {{ review.created_at.strftime('%b %Y') }}
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                  <div class="rating-badge">{{ review.overall_rating }}</div>
+                  <span class="stars">{{ review.star_display }}</span>
+                </div>
+              </div>
+
+              <div class="review-headline">{{ review.headline }}</div>
+
+              <div class="pros-cons">
+                <div class="pros-box"><strong>👍 Pros</strong>{{ review.pros }}</div>
+                <div class="cons-box"><strong>👎 Cons</strong>{{ review.cons }}</div>
+              </div>
+
+              {% if review.advice_to_management %}
+              <div style="margin-top:0.85rem;padding:0.75rem;background:var(--blue-light);border-radius:var(--radius-sm);border-left:3px solid #2E86C1;">
+                <strong style="font-size:0.78rem;color:#1A5276;display:block;margin-bottom:0.25rem;">💡 Advice to Management</strong>
+                <p style="font-size:0.83rem;color:#1A5276;">{{ review.advice_to_management }}</p>
+              </div>
+              {% endif %}
+
+              <div class="review-footer">
+                <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                  <span class="recommend-pill {{ 'recommend-yes' if review.would_recommend else 'recommend-no' }}">
+                    {{ '✓ Recommends' if review.would_recommend else '✗ Does not recommend' }}
+                  </span>
+                  {% if review.ceo_approval is not none %}
+                  <span class="badge {{ 'badge-green' if review.ceo_approval else 'badge-red' }}">
+                    {{ '✓ CEO Approved' if review.ceo_approval else '✗ CEO Disapproved' }}
+                  </span>
+                  {% endif %}
+                </div>
+                <div class="helpful-btns">
+                  <span>Helpful?</span>
+                  <button class="helpful-btn" data-review="{{ review.id }}" data-helpful="true">
+                    👍 <span class="vote-count">{{ review.helpful_count }}</span>
+                  </button>
+                  <button class="helpful-btn" data-review="{{ review.id }}" data-helpful="false">
+                    👎 <span class="vote-count">{{ review.not_helpful_count }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+
+            <!-- PAGINATION -->
+            {% if reviews.pages > 1 %}
+            <div class="pagination">
+              {% if reviews.has_prev %}
+                <a class="page-btn" href="?page={{ reviews.prev_num }}#reviews">‹</a>
+              {% endif %}
+              {% for p in reviews.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if p %}
+                  <a class="page-btn {{ 'active' if p == reviews.page }}" href="?page={{ p }}#reviews">{{ p }}</a>
+                {% else %}
+                  <span class="page-btn disabled">…</span>
+                {% endif %}
+              {% endfor %}
+              {% if reviews.has_next %}
+                <a class="page-btn" href="?page={{ reviews.next_num }}#reviews">›</a>
+              {% endif %}
+            </div>
+            {% endif %}
+
+          {% else %}
+            <div class="empty-state">
+              <div class="empty-state-icon">📝</div>
+              <h3>No reviews yet</h3>
+              <p>Be the first to share your experience at {{ company.name }}</p>
+              <a href="{{ url_for('reviews.write_review', company_id=company.id) }}" class="btn btn-amber">Write First Review</a>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- SALARIES TAB -->
+        <div class="tab-pane" id="salaries" data-tab-pane="company">
+          {% if salaries %}
+          <div style="overflow-x:auto;">
+            <table class="salary-table">
+              <thead>
+                <tr>
+                  <th>Job Title</th>
+                  <th>Level</th>
+                  <th>Monthly Gross</th>
+                  <th>Range</th>
+                  <th>Exp.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in salaries %}
+                <tr>
+                  <td>
+                    <strong>{{ s.job_title }}</strong>
+                    <div style="font-size:0.75rem;color:var(--text-light);">{{ s.department }}</div>
+                  </td>
+                  <td><span class="badge badge-navy">{{ s.job_level }}</span></td>
+                  <td><span class="salary-amount">{{ "{:,}".format(s.monthly_gross) }}</span></td>
+                  <td>
+                    <div class="salary-bar-wrap">
+                      <span style="font-size:0.7rem;color:var(--text-light);">Low</span>
+                      <div class="salary-bar">
+                        <div class="salary-bar-fill" data-pct="{{ [(s.monthly_gross / 400000 * 100)|int, 100]|min }}"></div>
+                      </div>
+                      <span style="font-size:0.7rem;color:var(--text-light);">High</span>
+                    </div>
+                  </td>
+                  <td style="color:var(--text-light);font-size:0.8rem;">{{ s.years_experience|int }}yr+</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div style="text-align:center;margin-top:1.5rem;">
+            <a href="{{ url_for('salaries.share_salary', company_id=company.id) }}" class="btn btn-outline">Share Your Salary →</a>
+          </div>
+          {% else %}
+            <div class="empty-state">
+              <div class="empty-state-icon">💰</div>
+              <h3>No salary data yet</h3>
+              <p>Help others negotiate better. Share what you earn anonymously.</p>
+              <a href="{{ url_for('salaries.share_salary', company_id=company.id) }}" class="btn btn-amber">Share Salary</a>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- INTERVIEWS TAB -->
+        <div class="tab-pane" id="interviews" data-tab-pane="company">
+          {% if interviews %}
+            {% for iv in interviews %}
+            <div class="review-card">
+              <div class="review-header">
+                <div>
+                  <div class="reviewer-title">{{ iv.job_title }}</div>
+                  <div class="reviewer-meta">
+                    Applied {{ iv.how_applied|replace('-',' ')|title }} ·
+                    {{ iv.num_rounds }} round{% if iv.num_rounds != 1 %}s{% endif %} ·
+                    {% if iv.duration_weeks %}{{ iv.duration_weeks }} weeks · {% endif %}
+                    {{ iv.created_at.strftime('%b %Y') }}
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                  <span class="badge {{ 'badge-green' if iv.experience == 'positive' else 'badge-red' if iv.experience == 'negative' else 'badge-amber' }}">
+                    {{ iv.experience|title }} Experience
+                  </span>
+                  <span class="badge {{ 'badge-green' if iv.got_offer == 'yes' else 'badge-red' if iv.got_offer == 'no' else 'badge-amber' }}">
+                    {% if iv.got_offer == 'yes' %}✓ Got Offer{% elif iv.got_offer == 'no' %}✗ No Offer{% elif iv.got_offer == 'declined' %}Declined Offer{% else %}Awaiting{% endif %}
+                  </span>
+                </div>
+              </div>
+
+              <div style="margin-bottom:0.75rem;">
+                <p style="font-size:0.88rem;color:var(--text-mid);line-height:1.7;">{{ iv.process_description }}</p>
+              </div>
+
+              {% if iv.questions_asked %}
+              <div style="margin-bottom:0.75rem;padding:0.75rem;background:var(--blue-light);border-radius:var(--radius-sm);">
+                <strong style="font-size:0.78rem;color:#1A5276;display:block;margin-bottom:0.4rem;">❓ Questions Asked</strong>
+                <p style="font-size:0.83rem;color:#1A5276;">{{ iv.questions_asked }}</p>
+              </div>
+              {% endif %}
+
+              {% if iv.tips %}
+              <div style="padding:0.75rem;background:var(--green-light);border-radius:var(--radius-sm);">
+                <strong style="font-size:0.78rem;color:#1E6B3E;display:block;margin-bottom:0.4rem;">💡 Tips for Candidates</strong>
+                <p style="font-size:0.83rem;color:#1E6B3E;">{{ iv.tips }}</p>
+              </div>
+              {% endif %}
+
+              <div style="margin-top:0.75rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+                <span style="font-size:0.78rem;color:var(--text-light);">
+                  Difficulty: {% for i in range(5) %}<span style="color:{{ 'var(--amber)' if i < iv.difficulty else 'var(--grey-border)' }};">●</span>{% endfor %}
+                </span>
+              </div>
+            </div>
+            {% endfor %}
+            <div style="text-align:center;margin-top:1rem;">
+              <a href="{{ url_for('salaries.share_interview', company_id=company.id) }}" class="btn btn-outline">Share Your Interview Experience →</a>
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <div class="empty-state-icon">🤝</div>
+              <h3>No interview experiences yet</h3>
+              <p>Help others prepare. Share your interview story anonymously.</p>
+              <a href="{{ url_for('salaries.share_interview', company_id=company.id) }}" class="btn btn-amber">Share Experience</a>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- ABOUT TAB -->
+        <div class="tab-pane" id="about" data-tab-pane="company">
+          <div class="review-card">
+            <h3 style="margin-bottom:1rem;">About {{ company.name }}</h3>
+            <p style="color:var(--text-mid);line-height:1.75;margin-bottom:1rem;">{{ company.description }}</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;">
+              {% if company.founded %}
+              <div><div style="font-size:0.72rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">Founded</div><strong>{{ company.founded }}</strong></div>
+              {% endif %}
+              {% if company.size %}
+              <div><div style="font-size:0.72rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">Size</div><strong>{{ company.size }}</strong></div>
+              {% endif %}
+              <div><div style="font-size:0.72rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">Industry</div><strong>{{ company.industry }}</strong></div>
+              <div><div style="font-size:0.72rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">Headquarters</div><strong>{{ company.headquarters }}</strong></div>
+              {% if company.website %}
+              <div><div style="font-size:0.72rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.25rem;">Website</div><a href="{{ company.website }}" target="_blank" style="color:var(--amber);">Visit →</a></div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDEBAR -->
+      <div>
+        <!-- Overall Rating -->
+        <div class="card" style="margin-bottom:1.25rem;">
+          <div class="card-body">
+            <h3 style="margin-bottom:1rem;font-size:0.95rem;">Overall Rating</h3>
+            <div style="text-align:center;margin-bottom:1rem;">
+              <div style="font-family:'Playfair Display',serif;font-size:3.5rem;font-weight:700;color:var(--navy);line-height:1;">{{ company.avg_rating }}</div>
+              <div class="stars" style="font-size:1.3rem;margin:0.25rem 0;">
+                {% for i in range(5) %}{% if i < company.avg_rating|int %}★{% else %}☆{% endif %}{% endfor %}
+              </div>
+              <div style="font-size:0.78rem;color:var(--text-light);">{{ company.review_count }} review{% if company.review_count != 1 %}s{% endif %}</div>
+            </div>
+
+            <!-- Rating Breakdown -->
+            {% if rating_breakdown %}
+            <div class="rating-breakdown">
+              {% for star in [5,4,3,2,1] %}
+              {% set count = rating_breakdown.get(star, 0) %}
+              {% set pct = ((count / company.review_count * 100)|int) if company.review_count > 0 else 0 %}
+              <div class="rating-row-bar">
+                <span>{{ star }}★</span>
+                <div class="rb-track"><div class="rb-fill" data-width="{{ pct }}"></div></div>
+                <span>{{ count }}</span>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Sub-ratings -->
+        {% if sub_ratings %}
+        <div class="card" style="margin-bottom:1.25rem;">
+          <div class="card-body">
+            <h3 style="margin-bottom:1rem;font-size:0.95rem;">Category Ratings</h3>
+            <div class="sub-ratings">
+              {% for label, val in sub_ratings.items() %}
+              <div class="sub-rating-row">
+                <span>{{ label }}</span>
+                <div class="sub-rating-bar">
+                  <div class="sub-rating-fill" data-width="{{ (val/5*100)|int }}"></div>
+                </div>
+                <span class="sub-rating-num">{{ val }}</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Salary snapshot -->
+        {% if salary_avg > 0 %}
+        <div class="card" style="margin-bottom:1.25rem;">
+          <div class="card-body">
+            <h3 style="margin-bottom:0.5rem;font-size:0.95rem;">Salary Snapshot</h3>
+            <div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--navy);">KES {{ "{:,}".format(salary_avg) }}</div>
+            <div style="font-size:0.78rem;color:var(--text-light);margin-bottom:1rem;">Average monthly gross</div>
+            <a href="{{ url_for('salaries.share_salary', company_id=company.id) }}" class="btn btn-outline btn-sm" style="width:100%;justify-content:center;">Add Your Salary</a>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Transparency score -->
+        <div class="card" style="margin-bottom:1.25rem;">
+          <div class="card-body">
+            <h3 style="margin-bottom:0.75rem;font-size:0.95rem;">Transparency Score</h3>
+            <div class="t-meter">
+              <div class="t-meter-label">
+                <span>Based on all ratings</span>
+                <strong>{{ company.transparency_score }}%</strong>
+              </div>
+              <div class="t-meter-track">
+                <div class="t-meter-fill" data-width="{{ company.transparency_score }}"></div>
+              </div>
+            </div>
+            <p style="font-size:0.75rem;color:var(--text-light);margin-top:0.5rem;">Aggregated from culture, management, work-life balance, pay and growth ratings.</p>
+          </div>
+        </div>
+
+        <!-- Write review CTA -->
+        <div style="background:var(--navy);border-radius:var(--radius);padding:1.25rem;text-align:center;">
+          <div style="font-size:1.5rem;margin-bottom:0.5rem;">👁️</div>
+          <h3 style="color:white;font-size:0.95rem;margin-bottom:0.5rem;">Work here?</h3>
+          <p style="color:rgba(255,255,255,0.55);font-size:0.8rem;margin-bottom:1rem;">Your anonymous review helps thousands make better career decisions.</p>
+          <a href="{{ url_for('reviews.write_review', company_id=company.id) }}" class="btn btn-amber" style="width:100%;justify-content:center;">Write a Review</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SIMILAR COMPANIES -->
+{% if similar %}
+<section class="section-sm" style="background:white;">
+  <div class="container">
+    <h3 style="margin-bottom:1.25rem;">Other Companies You Might Want to Compare</h3>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+      {% for c in similar %}
+      <a href="{{ url_for('companies.company_detail', slug=c.slug) }}"
+         style="display:flex;align-items:center;gap:0.6rem;background:var(--grey-bg);border:1px solid var(--grey-border);border-radius:var(--radius-sm);padding:0.6rem 1rem;transition:all var(--transition);">
+        <div class="company-logo" style="background:{{ c.logo_color }};width:32px;height:32px;font-size:0.65rem;border-radius:6px;">{{ c.logo_initials }}</div>
+        <div>
+          <div style="font-weight:600;font-size:0.85rem;">{{ c.name }}</div>
+          <div style="font-size:0.72rem;color:var(--text-light);">{{ c.avg_rating }}★ · {{ c.review_count }} reviews</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<style>
+@media (max-width:900px) {
+  .detail-layout { grid-template-columns: 1fr !important; }
+}
+</style>
+{% endblock %}
