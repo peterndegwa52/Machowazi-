@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}About Macho Wazi — Kenya's Workplace Transparency Platform{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>About Macho Wazi</h1>
+    <p>The story behind Kenya's first anonymous workplace review platform.</p>
+  </div>
+</div>
+<section class="section">
+  <div class="container-sm">
+    <div style="font-size:1rem;color:var(--text-mid);line-height:1.85;">
+      <p style="margin-bottom:1.5rem;font-size:1.1rem;color:var(--text-dark);font-family:'Playfair Display',serif;font-style:italic;">
+        "Every year, thousands of Kenyan professionals accept job offers without ever knowing what it's really like to work there. That is the problem Macho Wazi exists to solve."
+      </p>
+      <p style="margin-bottom:1.25rem;">Kenya's job market runs on word of mouth, whisper networks, and guesswork. You ask a friend if a company is good. You hope they know someone who works there. You take the job and hope for the best.</p>
+      <p style="margin-bottom:1.25rem;">Macho Wazi changes that. We built a platform where Kenya's professionals can share anonymous, honest, verified reviews of their employers — so the next person walks in with their eyes wide open.</p>
+      <p style="margin-bottom:1.25rem;">We started with banking because it is Kenya's largest formal employment sector and the one most desperate for transparency. We will expand across all industries as the community grows.</p>
+      <h3 style="margin:2rem 0 1rem;color:var(--text-dark);">Why Anonymous?</h3>
+      <p style="margin-bottom:1.25rem;">Because honesty requires safety. An employee who fears retaliation will not tell you the truth. By hashing emails immediately and building anonymity into the architecture — not as a feature, but as a foundation — we ensure that what you read on Macho Wazi is what people actually think, not what they feel safe saying publicly.</p>
+      <h3 style="margin:2rem 0 1rem;color:var(--text-dark);">Our Mission</h3>
+      <p>To give every Kenyan professional the information they need to make the best decision for their career and their life. No pay walls. No corporate spin. Just the truth, shared freely between colleagues who have been there.</p>
+    </div>
+    <div style="margin-top:3rem;text-align:center;">
+      <a href="{{ url_for('reviews.write_review') }}" class="btn btn-amber btn-lg">Add Your Voice →</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Sign In — Macho Wazi{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container-sm" style="max-width:440px;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div class="logo-eye" style="width:52px;height:52px;margin:0 auto 1rem;"></div>
+      <h2>Welcome Back</h2>
+      <p style="color:var(--text-light);font-size:0.9rem;">Sign in to write reviews and share salaries anonymously.</p>
+    </div>
+    <div class="form-card">
+      <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+          <label>{{ form.email.label.text }}</label>
+          {{ form.email(class='form-control', placeholder='your@email.com') }}
+          {% for e in form.email.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="form-group">
+          <label>{{ form.password.label.text }}</label>
+          {{ form.password(class='form-control', placeholder='••••••••') }}
+          {% for e in form.password.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.83rem;cursor:pointer;">
+            {{ form.remember() }} Keep me signed in
+          </label>
+        </div>
+        <button type="submit" class="btn btn-amber" style="width:100%;justify-content:center;">Sign In</button>
+      </form>
+      <p style="text-align:center;margin-top:1.25rem;font-size:0.85rem;color:var(--text-light);">
+        Don't have an account? <a href="{{ url_for('auth.register') }}" style="color:var(--amber);font-weight:600;">Create one free</a>
+      </p>
+    </div>
+    <p style="text-align:center;margin-top:1rem;font-size:0.75rem;color:var(--text-light);">
+      🔒 Your email is hashed and never stored in plaintext. Ever.
+    </p>
+  </div>
+</section>
+{% endblock %}

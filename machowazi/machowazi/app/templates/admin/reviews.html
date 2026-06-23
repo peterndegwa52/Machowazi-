@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Moderate Reviews — Admin{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <h3 style="margin-bottom:1rem;">Admin Panel</h3>
+    <a class="admin-nav-link" href="{{ url_for('admin.dashboard') }}">📊 Dashboard</a>
+    <a class="admin-nav-link active" href="{{ url_for('admin.reviews') }}">📝 Reviews</a>
+    <a class="admin-nav-link" href="{{ url_for('admin.salaries') }}">💰 Salaries</a>
+    <a class="admin-nav-link" href="{{ url_for('admin.interviews') }}">🤝 Interviews</a>
+    <a class="admin-nav-link" href="{{ url_for('admin.companies') }}">🏦 Companies</a>
+    <a class="admin-nav-link" href="{{ url_for('admin.users') }}">👥 Users</a>
+    <div style="height:1px;background:rgba(255,255,255,0.08);margin:1rem 0;"></div>
+    <a class="admin-nav-link" href="{{ url_for('main.index') }}">← Back to Site</a>
+  </aside>
+
+  <div class="admin-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+      <h2>Review Moderation</h2>
+      <div style="display:flex;gap:0.5rem;">
+        {% for s, label in [('pending','Pending'),('approved','Approved'),('flagged','Flagged')] %}
+        <a href="?status={{ s }}"
+           style="padding:0.4rem 1rem;border-radius:100px;font-size:0.8rem;font-weight:500;
+                  background:{{ 'var(--navy)' if status == s else 'white' }};
+                  color:{{ 'white' if status == s else 'var(--text-mid)' }};
+                  border:1px solid {{ 'var(--navy)' if status == s else 'var(--grey-border)' }};">
+          {{ label }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if reviews %}
+      {% for r in reviews %}
+      <div style="background:white;border-radius:var(--radius);border:1px solid var(--grey-border);padding:1.25rem;margin-bottom:1rem;box-shadow:var(--shadow);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.75rem;margin-bottom:1rem;">
+          <div>
+            <div style="font-weight:600;">{{ r.job_title }} — <span style="color:var(--amber);">{{ r.company.name }}</span></div>
+            <div style="font-size:0.78rem;color:var(--text-light);">
+              {{ r.employment_status|title }} · {{ r.location }} · Submitted {{ r.created_at.strftime('%d %b %Y %H:%M') }}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="rating-badge">{{ r.overall_rating }}</div>
+            <span class="stars">{{ r.star_display }}</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom:0.75rem;">
+          <strong style="font-size:0.9rem;">"{{ r.headline }}"</strong>
+        </div>
+
+        <div class="pros-cons" style="margin-bottom:0.75rem;">
+          <div class="pros-box"><strong>👍 Pros</strong>{{ r.pros }}</div>
+          <div class="cons-box"><strong>👎 Cons</strong>{{ r.cons }}</div>
+        </div>
+
+        {% if r.advice_to_management %}
+        <div style="font-size:0.83rem;color:var(--text-mid);margin-bottom:0.75rem;">
+          <strong>Advice to Management:</strong> {{ r.advice_to_management }}
+        </div>
+        {% endif %}
+
+        {% if r.is_flagged %}
+        <div style="background:var(--red-light);border-radius:var(--radius-sm);padding:0.5rem 0.75rem;font-size:0.8rem;color:var(--red);margin-bottom:0.75rem;">
+          🚩 Flagged: {{ r.flag_reason }}
+        </div>
+        {% endif %}
+
+        <div style="display:flex;gap:0.75rem;border-top:1px solid var(--grey-border);padding-top:0.85rem;">
+          {% if not r.is_approved %}
+          <form method="POST" action="{{ url_for('admin.approve_review', review_id=r.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm" style="background:var(--green);color:white;border:none;">✓ Approve</button>
+          </form>
+          {% endif %}
+          <form method="POST" action="{{ url_for('admin.reject_review', review_id=r.id) }}"
+                onsubmit="return confirm('Delete this review permanently?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm" style="background:var(--red);color:white;border:none;">✗ Delete</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">✅</div>
+      <h3>No {{ status }} reviews</h3>
+      <p>All {{ status }} reviews have been processed.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

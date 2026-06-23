@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{% block title %}Macho Wazi — See Inside Before You Step In{% endblock %}</title>
+<meta name="description" content="{% block meta_desc %}Kenya's first anonymous workplace review platform. Read real employee reviews, salaries and interview experiences for Kenyan banks and companies.{% endblock %}"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"/>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a class="logo" href="{{ url_for('main.index') }}">
+      <div class="logo-eye"></div>
+      <span class="logo-text">Macho<span>Wazi</span></span>
+    </a>
+
+    <button class="nav-toggle" id="navToggle">&#9776;</button>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="{{ url_for('companies.all_companies') }}" {% if request.blueprint == 'companies' %}class="active"{% endif %}>Companies</a></li>
+      <li><a href="{{ url_for('salaries.salary_explorer') }}" {% if request.endpoint == 'salaries.salary_explorer' %}class="active"{% endif %}>Salaries</a></li>
+      <li><a href="{{ url_for('salaries.interviews') }}" {% if request.endpoint == 'salaries.interviews' %}class="active"{% endif %}>Interviews</a></li>
+      {% if current_user.is_authenticated %}
+        <li><a href="{{ url_for('reviews.write_review') }}" class="nav-cta">Write a Review</a></li>
+        {% if current_user.is_admin %}
+          <li><a href="{{ url_for('admin.dashboard') }}" class="nav-admin">Admin</a></li>
+        {% endif %}
+        <li><a href="{{ url_for('auth.logout') }}" class="nav-logout">Sign Out</a></li>
+      {% else %}
+        <li><a href="{{ url_for('auth.login') }}">Sign In</a></li>
+        <li><a href="{{ url_for('reviews.write_review') }}" class="nav-cta">Write a Review</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
+
+<!-- FLASH MESSAGES -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          <span>{{ message }}</span>
+          <button class="flash-close" onclick="this.parentElement.remove()">✕</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<!-- MAIN CONTENT -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="logo" href="{{ url_for('main.index') }}">
+          <div class="logo-eye" style="width:28px;height:28px;"></div>
+          <span class="logo-text" style="font-size:1.1rem;">Macho<span>Wazi</span></span>
+        </a>
+        <p>Kenya's first workplace transparency platform. Helping professionals see inside companies before they commit. Built in Nairobi, for Nairobi.</p>
+        <p class="footer-tagline">🔒 100% Anonymous. Always.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="{{ url_for('companies.all_companies') }}">Company Reviews</a></li>
+          <li><a href="{{ url_for('salaries.salary_explorer') }}">Salary Data</a></li>
+          <li><a href="{{ url_for('salaries.interviews') }}">Interview Tips</a></li>
+          <li><a href="{{ url_for('reviews.write_review') }}">Write a Review</a></li>
+          <li><a href="{{ url_for('salaries.share_salary') }}">Share Salary</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Top Banks</h4>
+        <ul>
+          <li><a href="{{ url_for('companies.company_detail', slug='kcb-group') }}">KCB Group</a></li>
+          <li><a href="{{ url_for('companies.company_detail', slug='equity-bank') }}">Equity Bank</a></li>
+          <li><a href="{{ url_for('companies.company_detail', slug='ncba-bank') }}">NCBA Bank</a></li>
+          <li><a href="{{ url_for('companies.company_detail', slug='stanbic-bank') }}">Stanbic Bank</a></li>
+          <li><a href="{{ url_for('companies.all_companies') }}">All Companies →</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="{{ url_for('main.about') }}">About Us</a></li>
+          <li><a href="{{ url_for('main.how_it_works') }}">How Anonymity Works</a></li>
+          <li><a href="{{ url_for('main.for_employers') }}">For Employers</a></li>
+          <li><a href="#">Community Guidelines</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 MaChoWazi Ltd. All rights reserved. Nairobi, Kenya.</span>
+      <span>Made with <span class="amber">♥</span> for Kenya's workforce</span>
+    </div>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

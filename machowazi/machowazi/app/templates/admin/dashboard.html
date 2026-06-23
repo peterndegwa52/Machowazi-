@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard — Macho Wazi{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <h3 style="margin-bottom:1rem;">Admin Panel</h3>
+    <a class="admin-nav-link {{ 'active' if request.endpoint == 'admin.dashboard' }}" href="{{ url_for('admin.dashboard') }}">📊 Dashboard</a>
+    <a class="admin-nav-link {{ 'active' if request.endpoint == 'admin.reviews' }}" href="{{ url_for('admin.reviews') }}">
+      📝 Reviews
+      {% if stats.pending_reviews > 0 %}<span class="admin-badge">{{ stats.pending_reviews }}</span>{% endif %}
+    </a>
+    <a class="admin-nav-link {{ 'active' if request.endpoint == 'admin.salaries' }}" href="{{ url_for('admin.salaries') }}">
+      💰 Salaries
+      {% if stats.pending_salaries > 0 %}<span class="admin-badge">{{ stats.pending_salaries }}</span>{% endif %}
+    </a>
+    <a class="admin-nav-link {{ 'active' if request.endpoint == 'admin.interviews' }}" href="{{ url_for('admin.interviews') }}">
+      🤝 Interviews
+      {% if stats.pending_interviews > 0 %}<span class="admin-badge">{{ stats.pending_interviews }}</span>{% endif %}
+    </a>
+    <a class="admin-nav-link {{ 'active' if request.endpoint == 'admin.companies' }}" href="{{ url_for('admin.companies') }}">🏦 Companies</a>
+    <a class="admin-nav-link {{ 'active' if request.endpoint == 'admin.users' }}" href="{{ url_for('admin.users') }}">👥 Users</a>
+    <div style="height:1px;background:rgba(255,255,255,0.08);margin:1rem 0;"></div>
+    <a class="admin-nav-link" href="{{ url_for('main.index') }}">← Back to Site</a>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="admin-content">
+    <h2 style="margin-bottom:1.5rem;">Dashboard Overview</h2>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.total_users }}</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.total_companies }}</div>
+        <div class="stat-label">Companies</div>
+      </div>
+      <div class="stat-card {{ 'warning' if stats.pending_reviews > 0 }}">
+        <div class="stat-number">{{ stats.pending_reviews }}</div>
+        <div class="stat-label">Pending Reviews</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.approved_reviews }}</div>
+        <div class="stat-label">Approved Reviews</div>
+      </div>
+      <div class="stat-card {{ 'danger' if stats.flagged_reviews > 0 }}">
+        <div class="stat-number">{{ stats.flagged_reviews }}</div>
+        <div class="stat-label">Flagged Reviews</div>
+      </div>
+      <div class="stat-card {{ 'warning' if stats.pending_salaries > 0 }}">
+        <div class="stat-number">{{ stats.pending_salaries }}</div>
+        <div class="stat-label">Pending Salaries</div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:1rem;">Recent Pending Reviews</h3>
+    {% if recent_reviews %}
+    <div style="background:white;border-radius:var(--radius);border:1px solid var(--grey-border);overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--grey-border);">
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;">Company</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Role</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Rating</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Date</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in recent_reviews %}
+          <tr style="border-bottom:1px solid var(--grey-border);">
+            <td style="padding:0.9rem 1rem;font-weight:600;">{{ r.company.name }}</td>
+            <td style="padding:0.9rem 1rem;color:var(--text-mid);">{{ r.job_title }}</td>
+            <td style="padding:0.9rem 1rem;">
+              <span style="background:var(--navy);color:var(--amber);padding:0.2rem 0.5rem;border-radius:5px;font-weight:700;font-size:0.85rem;">{{ r.overall_rating }}</span>
+            </td>
+            <td style="padding:0.9rem 1rem;color:var(--text-light);font-size:0.8rem;">{{ r.created_at.strftime('%d %b %Y') }}</td>
+            <td style="padding:0.9rem 1rem;">
+              <div style="display:flex;gap:0.5rem;">
+                <form method="POST" action="{{ url_for('admin.approve_review', review_id=r.id) }}" style="display:inline;">
+                  {{ form.hidden_tag() if form is defined }}
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm" style="background:var(--green);color:white;border:none;">✓ Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.reject_review', review_id=r.id) }}" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm" style="background:var(--red);color:white;border:none;">✗ Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:2rem;">
+      <div class="empty-state-icon">✅</div>
+      <p>No pending reviews. All caught up!</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

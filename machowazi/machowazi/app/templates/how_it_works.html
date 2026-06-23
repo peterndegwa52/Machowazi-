@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}How Anonymity Works — Macho Wazi{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container"><h1>How Anonymity Works</h1><p>The technical and ethical foundation that protects you.</p></div>
+</div>
+<section class="section"><div class="container-sm">
+  <div style="display:flex;flex-direction:column;gap:2rem;">
+    {% for step, title, desc in [
+      ('01','Your email is hashed immediately','When you register, your email address is converted into a one-way cryptographic hash using SHA-256. The original email is discarded. We cannot reverse-engineer your email from the hash — not even our own engineers.'),
+      ('02','You get a random anonymous token','Instead of your name, we assign you a random 32-character token as your identity on the platform. This token has no connection to your real identity.'),
+      ('03','Reviews are submitted by tokens, not people','When you write a review, it is linked to your anonymous token — not your name, not your email. A review says "Token: a3f9..." wrote this, and that token is meaningless to anyone who sees it.'),
+      ('04','We verify without identifying','We verify that you have an account to prevent spam and fake reviews. We do not verify which specific company you worked at — we trust your honesty and our community moderation flags bad actors.'),
+      ('05','No names are ever shown','No review, salary, or interview experience on Macho Wazi ever shows a name, photo, email, or any identifying information. Ever. By design.'),
+    ] %}
+    <div style="display:flex;gap:1.5rem;align-items:flex-start;">
+      <div style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--amber);flex-shrink:0;width:48px;">{{ step }}</div>
+      <div>
+        <h3 style="margin-bottom:0.5rem;color:var(--text-dark);">{{ title }}</h3>
+        <p style="color:var(--text-mid);line-height:1.75;">{{ desc }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div style="margin-top:3rem;text-align:center;">
+    <a href="{{ url_for('auth.register') }}" class="btn btn-amber btn-lg">Create Anonymous Account →</a>
+  </div>
+</div></section>
+{% endblock %}

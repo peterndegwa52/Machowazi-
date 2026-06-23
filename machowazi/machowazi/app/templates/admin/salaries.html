@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Moderate Salaries — Admin{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <h3 style="margin-bottom:1rem;">Admin Panel</h3>
+    <a class="admin-nav-link" href="{{ url_for('admin.dashboard') }}">📊 Dashboard</a>
+    <a class="admin-nav-link" href="{{ url_for('admin.reviews') }}">📝 Reviews</a>
+    <a class="admin-nav-link active" href="{{ url_for('admin.salaries') }}">💰 Salaries</a>
+    <a class="admin-nav-link" href="{{ url_for('admin.interviews') }}">🤝 Interviews</a>
+    <a class="admin-nav-link" href="{{ url_for('admin.companies') }}">🏦 Companies</a>
+    <a class="admin-nav-link" href="{{ url_for('admin.users') }}">👥 Users</a>
+    <div style="height:1px;background:rgba(255,255,255,0.08);margin:1rem 0;"></div>
+    <a class="admin-nav-link" href="{{ url_for('main.index') }}">← Back to Site</a>
+  </aside>
+
+  <div class="admin-content">
+    <h2 style="margin-bottom:1.5rem;">Pending Salaries ({{ salaries|length }})</h2>
+
+    {% if salaries %}
+    <div style="background:white;border-radius:var(--radius);border:1px solid var(--grey-border);overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--grey-border);">
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Company</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Role</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Level</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Gross/mo</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Submitted</th>
+            <th style="padding:0.75rem 1rem;text-align:left;color:var(--text-light);font-size:0.72rem;text-transform:uppercase;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in salaries %}
+          <tr style="border-bottom:1px solid var(--grey-border);">
+            <td style="padding:0.9rem 1rem;font-weight:600;">{{ s.company.name }}</td>
+            <td style="padding:0.9rem 1rem;">
+              {{ s.job_title }}
+              <div style="font-size:0.73rem;color:var(--text-light);">{{ s.department }}</div>
+            </td>
+            <td style="padding:0.9rem 1rem;"><span class="badge badge-navy">{{ s.job_level }}</span></td>
+            <td style="padding:0.9rem 1rem;"><span class="salary-amount" style="font-size:0.92rem;">KES {{ "{:,}".format(s.monthly_gross) }}</span></td>
+            <td style="padding:0.9rem 1rem;color:var(--text-light);font-size:0.8rem;">{{ s.created_at.strftime('%d %b %Y') }}</td>
+            <td style="padding:0.9rem 1rem;">
+              <div style="display:flex;gap:0.5rem;">
+                <form method="POST" action="{{ url_for('admin.approve_salary', salary_id=s.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm" style="background:var(--green);color:white;border:none;">✓ Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.reject_salary', salary_id=s.id) }}"
+                      onsubmit="return confirm('Delete this salary entry?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm" style="background:var(--red);color:white;border:none;">✗ Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state"><div class="empty-state-icon">✅</div><h3>No pending salaries</h3></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

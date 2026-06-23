@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Share Interview Experience — Macho Wazi{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>Share Your Interview Experience</h1>
+    <p>Help others prepare. 100% anonymous. Takes 3 minutes.</p>
+  </div>
+</div>
+<section class="section-sm">
+  <div class="container-sm">
+    <div class="anon-note">🔒 <div>Your experience is shared anonymously. No identifying details are ever shown.</div></div>
+    <form method="POST" class="form-card">
+      {{ form.hidden_tag() }}
+
+      {% if company %}
+      <div class="form-group">
+        <label>Company</label>
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.72rem 0.9rem;background:var(--grey-bg);border:1.5px solid var(--grey-border);border-radius:var(--radius-sm);">
+          <div class="company-logo" style="background:{{ company.logo_color }};width:32px;height:32px;font-size:0.65rem;border-radius:6px;">{{ company.logo_initials }}</div>
+          <strong>{{ company.name }}</strong>
+        </div>
+        <input type="hidden" name="company_id" value="{{ company.id }}">
+      </div>
+      {% else %}
+      <div class="form-group">
+        <label>Company <span class="required">*</span></label>
+        <select name="company_id" class="form-control" required>
+          <option value="">Select company...</option>
+          {% for c in companies %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label>{{ form.job_title.label.text }} <span class="required">*</span></label>
+        {{ form.job_title(class='form-control', placeholder='e.g. Graduate Management Trainee') }}
+        {% for e in form.job_title.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+        <div class="form-group">
+          <label>{{ form.experience.label.text }}</label>
+          {{ form.experience(class='form-control') }}
+        </div>
+        <div class="form-group">
+          <label>{{ form.got_offer.label.text }}</label>
+          {{ form.got_offer(class='form-control') }}
+        </div>
+        <div class="form-group">
+          <label>{{ form.how_applied.label.text }}</label>
+          {{ form.how_applied(class='form-control') }}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+        <div class="form-group">
+          <label>{{ form.difficulty.label.text }}</label>
+          {{ form.difficulty(class='form-control') }}
+        </div>
+        <div class="form-group">
+          <label>{{ form.num_rounds.label.text }} <span class="required">*</span></label>
+          {{ form.num_rounds(class='form-control', placeholder='e.g. 3') }}
+          {% for e in form.num_rounds.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="form-group">
+          <label>{{ form.duration_weeks.label.text }}</label>
+          {{ form.duration_weeks(class='form-control', placeholder='e.g. 4') }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>{{ form.process_description.label.text }} <span class="required">*</span></label>
+        {{ form.process_description(class='form-control', rows=5, placeholder='Walk us through the entire process — what happened at each round, how were you contacted, how long did things take?') }}
+        {% for e in form.process_description.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="form-group">
+        <label>{{ form.questions_asked.label.text }}</label>
+        {{ form.questions_asked(class='form-control', rows=4, placeholder='What specific questions were you asked? The more specific the better for others.') }}
+      </div>
+
+      <div class="form-group">
+        <label>{{ form.tips.label.text }}</label>
+        {{ form.tips(class='form-control', rows=3, placeholder='What would you tell someone about to go for the same interview?') }}
+      </div>
+
+      <button type="submit" class="btn btn-amber btn-lg">Share Anonymously 🔒</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

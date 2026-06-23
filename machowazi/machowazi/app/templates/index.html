@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Macho Wazi — See Inside Before You Step In | Kenya's Workplace Review Platform{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">🇰🇪 Kenya's First Workplace Transparency Platform</div>
+  <h1>See <em>Inside</em> Before<br>You Step In</h1>
+  <p class="hero-sub">Anonymous employee reviews, real salaries, and honest interview stories from Kenya's banking and finance sector.</p>
+
+  <div class="hero-search" style="position:relative;">
+    <input id="heroSearch" type="text" placeholder="Search a bank — e.g. KCB, Equity, NCBA, Stanbic..."/>
+    <button id="heroSearchBtn">Search</button>
+    <div class="search-dropdown" id="searchDropdown"></div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <strong>{{ total_reviews }}+</strong>
+      <span>Reviews</span>
+    </div>
+    <div class="hero-stat">
+      <strong>{{ total_companies }}</strong>
+      <span>Companies</span>
+    </div>
+    <div class="hero-stat">
+      <strong>{{ total_salaries }}+</strong>
+      <span>Salaries Shared</span>
+    </div>
+    <div class="hero-stat">
+      <strong>100%</strong>
+      <span>Anonymous</span>
+    </div>
+  </div>
+</section>
+
+<!-- TOP COMPANIES -->
+<section class="section">
+  <div class="container">
+    <p class="section-label">Banking Sector</p>
+    <h2 class="section-title">Top Reviewed Companies</h2>
+    <p class="section-sub" style="margin-bottom:2rem;">Real scores from real employees. Updated weekly. Zero paid placements.</p>
+
+    <div class="grid-3">
+      {% for company in companies %}
+      <a class="company-card" href="{{ url_for('companies.company_detail', slug=company.slug) }}">
+        <div class="company-card-body">
+          <div class="card-top">
+            <div class="company-logo" style="background:{{ company.logo_color }};">{{ company.logo_initials }}</div>
+            <div class="card-info">
+              <h3>{{ company.name }}</h3>
+              <p>{{ company.industry }} · {{ company.headquarters }}</p>
+              <div class="rating-row">
+                <div class="rating-badge">{{ company.avg_rating }}</div>
+                <span class="stars">
+                  {% set rating = company.avg_rating %}
+                  {% for i in range(5) %}
+                    {% if i < rating|int %}★{% else %}☆{% endif %}
+                  {% endfor %}
+                </span>
+                <span class="rating-count">{{ company.review_count }} reviews</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="t-meter">
+            <div class="t-meter-label">
+              <span>Transparency Score</span>
+              <strong>{{ company.transparency_score }}%</strong>
+            </div>
+            <div class="t-meter-track">
+              <div class="t-meter-fill" data-width="{{ company.transparency_score }}"></div>
+            </div>
+          </div>
+
+          {% set recent = company.reviews.filter_by(is_approved=True).order_by_desc = company.reviews.filter_by(is_approved=True).first() %}
+          {% set r = company.reviews.filter_by(is_approved=True).first() %}
+          {% if r %}
+          <div class="card-footer-strip">
+            <p class="review-snippet">{{ r.headline }}</p>
+            <span class="card-link">Read all →</span>
+          </div>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <div style="text-align:center;margin-top:2rem;">
+      <a href="{{ url_for('companies.all_companies') }}" class="btn btn-outline">View All Companies →</a>
+    </div>
+  </div>
+</section>
+
+<!-- RECENT REVIEWS -->
+<section class="section" style="background:white;padding:3rem 0;">
+  <div class="container">
+    <p class="section-label">Fresh Off The Platform</p>
+    <h2 class="section-title">What Employees Are Saying</h2>
+    <p class="section-sub" style="margin-bottom:2rem;">100% anonymous. Verified. Honest.</p>
+
+    {% for review in recent_reviews %}
+    <div class="review-card">
+      <div class="review-header">
+        <div>
+          <div class="reviewer-title">{{ review.job_title }}</div>
+          <div class="reviewer-meta">
+            <a href="{{ url_for('companies.company_detail', slug=review.company.slug) }}"
+               style="color:var(--amber);font-weight:600;">{{ review.company.name }}</a>
+            · {{ review.location }} · {{ review.employment_status|title }} Employee
+            · {{ review.created_at.strftime('%d %b %Y') }}
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+          <div class="rating-badge">{{ review.overall_rating }}</div>
+          <span class="stars">{{ review.star_display }}</span>
+        </div>
+      </div>
+
+      <div class="review-headline">{{ review.headline }}</div>
+
+      <div class="pros-cons">
+        <div class="pros-box">
+          <strong>👍 Pros</strong>
+          {{ review.pros[:180] }}{% if review.pros|length > 180 %}...{% endif %}
+        </div>
+        <div class="cons-box">
+          <strong>👎 Cons</strong>
+          {{ review.cons[:180] }}{% if review.cons|length > 180 %}...{% endif %}
+        </div>
+      </div>
+
+      <div class="review-footer">
+        <span class="recommend-pill {{ 'recommend-yes' if review.would_recommend else 'recommend-no' }}">
+          {{ '✓ Recommends' if review.would_recommend else '✗ Does not recommend' }}
+        </span>
+        <a href="{{ url_for('companies.company_detail', slug=review.company.slug) }}"
+           class="btn btn-sm btn-outline">Read full review →</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section how-bg">
+  <div class="container">
+    <p class="section-label" style="color:var(--amber);">How It Works</p>
+    <h2 class="section-title" style="color:white;margin-bottom:2rem;">Built on Honesty. Protected by Anonymity.</h2>
+    <div class="how-grid">
+      <div class="how-card">
+        <div class="how-icon">✍️</div>
+        <h3>Write Anonymously</h3>
+        <p>Share your experience with no name attached. We verify employment without ever exposing your identity.</p>
+      </div>
+      <div class="how-card">
+        <div class="how-icon">🔍</div>
+        <h3>Read Before You Apply</h3>
+        <p>Search any Kenyan bank and read real reviews, real salaries, and real interview experiences before committing.</p>
+      </div>
+      <div class="how-card">
+        <div class="how-icon">⚖️</div>
+        <h3>Compare Fairly</h3>
+        <p>Our Transparency Score aggregates culture, pay, management, and growth into one honest number per company.</p>
+      </div>
+      <div class="how-card">
+        <div class="how-icon">📈</div>
+        <h3>Know Your Worth</h3>
+        <p>See what peers in your role at competing banks earn. Negotiate from real knowledge, not guesswork.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section">
+  <div class="container">
+    <div class="cta-banner">
+      <h2>Your Review Can Change Someone's Career</h2>
+      <p>5 minutes of your time gives the next person the information you wish you had. 100% anonymous. Always.</p>
+      <div class="cta-buttons">
+        <a href="{{ url_for('reviews.write_review') }}" class="btn btn-primary btn-lg">Write a Review Now</a>
+        <a href="{{ url_for('salaries.share_salary') }}" class="btn btn-ghost btn-lg">Share Your Salary</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Salary Explorer — Macho Wazi{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div class="container">
+    <h1>Salary Explorer</h1>
+    <p>Real salaries shared anonymously by Kenya's banking professionals.</p>
+  </div>
+</div>
+
+<section class="section-sm">
+  <div class="container">
+
+    <!-- STATS BAR -->
+    {% if salaries %}
+    <div style="display:flex;gap:2rem;flex-wrap:wrap;background:white;border-radius:var(--radius);border:1px solid var(--grey-border);padding:1.25rem 1.5rem;margin-bottom:1.5rem;box-shadow:var(--shadow);">
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--navy);">KES {{ "{:,}".format(avg_salary) }}</div>
+        <div style="font-size:0.75rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;">Average Monthly Gross</div>
+      </div>
+      <div style="width:1px;background:var(--grey-border);"></div>
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--green);">KES {{ "{:,}".format(max_salary) }}</div>
+        <div style="font-size:0.75rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;">Highest Reported</div>
+      </div>
+      <div style="width:1px;background:var(--grey-border);"></div>
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--text-mid);">KES {{ "{:,}".format(min_salary) }}</div>
+        <div style="font-size:0.75rem;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;">Lowest Reported</div>
+      </div>
+      <div style="margin-left:auto;align-self:center;">
+        <a href="{{ url_for('salaries.share_salary') }}" class="btn btn-amber">+ Share Your Salary</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- FILTERS -->
+    <form method="GET" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:flex-end;">
+      <div>
+        <label style="font-size:0.75rem;color:var(--text-light);display:block;margin-bottom:4px;">Company</label>
+        <select name="company" class="form-control" style="min-width:160px;">
+          <option value="">All Companies</option>
+          {% for c in companies %}
+          <option value="{{ c.id }}" {{ 'selected' if selected_company == c.id }}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.75rem;color:var(--text-light);display:block;margin-bottom:4px;">Department</label>
+        <select name="dept" class="form-control" style="min-width:140px;">
+          <option value="">All Depts</option>
+          {% for d in departments %}
+          <option value="{{ d }}" {{ 'selected' if selected_dept == d }}>{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.75rem;color:var(--text-light);display:block;margin-bottom:4px;">Level</label>
+        <select name="level" class="form-control" style="min-width:120px;">
+          <option value="">All Levels</option>
+          {% for l in levels %}
+          <option value="{{ l }}" {{ 'selected' if selected_level == l }}>{{ l }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Filter</button>
+      <a href="{{ url_for('salaries.salary_explorer') }}" class="btn btn-outline">Reset</a>
+    </form>
+
+    <!-- TABLE -->
+    {% if salaries %}
+    <div style="background:white;border-radius:var(--radius);border:1px solid var(--grey-border);overflow:hidden;box-shadow:var(--shadow);">
+      <div style="overflow-x:auto;">
+        <table class="salary-table">
+          <thead>
+            <tr>
+              <th>Job Title</th>
+              <th>Company</th>
+              <th>Level</th>
+              <th>Monthly Gross (KES)</th>
+              <th>Take-Home</th>
+              <th>Bonus/yr</th>
+              <th>Exp.</th>
+              <th>Location</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in salaries %}
+            <tr>
+              <td>
+                <strong>{{ s.job_title }}</strong>
+                <div style="font-size:0.73rem;color:var(--text-light);">{{ s.department }}</div>
+              </td>
+              <td>
+                <a href="{{ url_for('companies.company_detail', slug=s.company.slug) }}" style="color:var(--amber);font-weight:600;">{{ s.company.name }}</a>
+              </td>
+              <td><span class="badge badge-navy">{{ s.job_level }}</span></td>
+              <td>
+                <span class="salary-amount">{{ "{:,}".format(s.monthly_gross) }}</span>
+                <div class="salary-bar-wrap" style="margin-top:4px;">
+                  <div class="salary-bar">
+                    <div class="salary-bar-fill" data-pct="{{ [(s.monthly_gross / 400000 * 100)|int, 100]|min }}"></div>
+                  </div>
+                </div>
+              </td>
+              <td style="color:var(--text-mid);">{{ "{:,}".format(s.monthly_net) if s.monthly_net else '—' }}</td>
+              <td style="color:var(--text-mid);">{{ "{:,}".format(s.bonus_annual) if s.bonus_annual else '—' }}</td>
+              <td style="color:var(--text-light);font-size:0.8rem;">{{ s.years_experience|int }}yr+</td>
+              <td style="color:var(--text-light);font-size:0.8rem;">{{ s.location }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">💰</div>
+      <h3>No salary data yet</h3>
+      <p>Be the first to share what you earn. It takes 2 minutes and is 100% anonymous.</p>
+      <a href="{{ url_for('salaries.share_salary') }}" class="btn btn-amber">Share Your Salary</a>
+    </div>
+    {% endif %}
+
+    <div style="text-align:center;margin-top:2rem;">
+      <a href="{{ url_for('salaries.share_salary') }}" class="btn btn-outline">Share Your Salary Anonymously →</a>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
